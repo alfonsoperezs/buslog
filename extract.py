@@ -1,22 +1,21 @@
 import pytesseract
 from PIL import Image
+from exceptions import ParsingError
 
 def extract_text(image: str) -> str:
     return pytesseract.image_to_string(Image.open(image))
 
 def process_text(text: str) -> list:
-    l = text.split('\n')
-    while True:
-        try:
-            l.remove('')
-        except ValueError:
-            break
-    return l
+    return text.split('\n')
 
 def obtain_data(data: list) -> dict:
-    line = next((s.split("+")[-1].strip() for s in data if s.startswith("Linea")), None)
-    date = next((s.split(": ")[-1] for s in data if s.startswith("Fecha")), None)
-    stop = next((s.split(": ")[-1] for s in data if s.startswith("Origen")), None)
+    try:
+        line = next((s.split("+")[-1].strip() for s in data if s.startswith("Linea") and "+" in s))
+        date = next((s.split(": ")[-1] for s in data if s.startswith("Fecha") and ": " in s))
+        stop = next((s.split(": ")[-1] for s in data if s.startswith("Origen") and ": " in s))
+    except StopIteration:
+        raise ParsingError("Can't find all necesary data")
+    
     return {"Line": line, "Date": date, "Stop": stop}
 
 
