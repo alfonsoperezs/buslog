@@ -3,12 +3,45 @@ from PIL import Image
 from exceptions import ParsingError
 
 def extract_text(image: str) -> str:
+    """Convert a image to text
+
+    Params:
+        image (str): Path to the image file.
+
+    Return:
+        str: Extracted text from the image.
+
+    Raises:
+        FileNotFoundError: If the image file does not exist.
+    """
     return pytesseract.image_to_string(Image.open(image))
 
 def process_text(text: str) -> list:
+    """Processes a text by splitting it into lines.
+
+    Args:
+        text (str): The input text.
+
+    Returns:
+        list: A list of strings, each representing a line from the text.
+    """
     return text.split('\n')
 
 def obtain_data(data: list) -> dict:
+    """Extracts specific data from a list of text lines.
+
+    Args:
+        data (list): A list of strings containing various information.
+
+    Returns:
+        dict: A dictionary with extracted values:
+            - "Line" (str): The bus line information.
+            - "Date" (str): The date of the transaction.
+            - "Stop" (str): The origin stop.
+
+    Raises:
+        ParsingError: If any required data is missing.
+    """
     try:
         line = next((s.split("+")[-1].strip() for s in data if s.startswith("Linea") and "+" in s))
         date = next((s.split(": ")[-1] for s in data if s.startswith("Fecha") and ": " in s))
@@ -20,6 +53,6 @@ def obtain_data(data: list) -> dict:
 
 
 if __name__ == '__main__':
-    l = process_text(extract_text('test.jpg'))
+    l = process_text(extract_text('images/test.jpg'))
     d = obtain_data(l)
     print(d)
