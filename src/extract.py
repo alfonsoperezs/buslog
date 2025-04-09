@@ -1,4 +1,6 @@
 import pytesseract
+import cv2
+import numpy as np
 from PIL import Image
 from exceptions import ParsingError
 
@@ -14,9 +16,16 @@ def extract_text(image_path: str) -> str:
     Raises:
         FileNotFoundError: If the image file does not exist.
     """
-    # TODO preprocessing the image before convert to text
+    img = cv2.imread(image_path)
+    if img is None:
+        raise FileNotFoundError(f"No se pudo leer la imagen: {path}")
+    kernel = np.ones((2, 2), np.uint8)
+    kernel2 = np.ones((3, 3), np.uint8)
+    img = cv2.morphologyEx(img , cv2.MORPH_CLOSE, kernel)
+    img = cv2.morphologyEx(img , cv2.MORPH_OPEN, kernel2)
+    img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     custom_config = r'--oem 3 --psm 4'
-    return pytesseract.image_to_string(Image.open(image_path), config=custom_config)
+    return pytesseract.image_to_string(img_pil, config=custom_config)
 
 def process_text(text: str) -> list:
     """Processes a text by splitting it into lines.
